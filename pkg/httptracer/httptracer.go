@@ -58,6 +58,7 @@ func (t *tracer) SetMaxRedirects(n int) {
 }
 
 func (t *tracer) Trace(url, method string) *TracerResult {
+	defer t.client.CloseIdleConnections()
 
 	req, _ := http.NewRequest(strings.ToUpper(method), url, nil)
 

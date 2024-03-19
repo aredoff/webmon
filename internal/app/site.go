@@ -1,16 +1,12 @@
 package app
 
 import (
-	"fmt"
 	"math/rand"
 	"sync"
 	"time"
 
+	"github.com/aredoff/reagate/internal/log"
 	"github.com/aredoff/reagate/pkg/httptracer"
-)
-
-const (
-	DEFAULT_INTERVAL = 55 * time.Second
 )
 
 func newSite(url string, um *URLMonitor) *site {
@@ -68,14 +64,15 @@ func (s *site) Stop() {
 
 func (s *site) Monitoring() {
 	if s.URL == "" {
-		panic("URL is empty")
+		log.Fatal("URL is empty")
 	}
 	if s.Interval == 0 {
-		panic("Interval is 0")
+		log.Fatal("Interval is 0")
 	}
 
 	time.Sleep(time.Duration(rand.Intn(int(s.Interval.Milliseconds())) * int(time.Millisecond)))
-	fmt.Println("Start monitoring", s.URL)
+	log.Infof("Start monitoring %s", s.URL)
+	defer log.Infof("Stop monitorin %s", s.URL)
 	for {
 		select {
 		case <-s.done:
