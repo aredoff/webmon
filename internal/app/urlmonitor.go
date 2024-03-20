@@ -9,32 +9,36 @@ import (
 	"github.com/aredoff/reagate/pkg/httptracer"
 )
 
-const (
-	DEFAULT_CLEAR_INTERVAL = 120 * time.Second
-	DEFAULT_INTERVAL       = 55 * time.Second
-)
-
 func New() *URLMonitor {
+	clear_cron := time.Duration(config.Config.GetInt("clear_cron")) * time.Second
+	log.Infof("Set clearning cron : %d seconds", int(clear_cron.Seconds()))
+
 	clear_interval := time.Duration(config.Config.GetInt("clear_interval")) * time.Second
-	if clear_interval == 0 {
-		clear_interval = DEFAULT_CLEAR_INTERVAL
-	}
-	log.Infof("Set clearning interval: %d seconds", int(clear_interval.Seconds()))
+	log.Infof("Set clearning interval : %d seconds", int(clear_interval.Seconds()))
 
 	interval := time.Duration(config.Config.GetInt("interval")) * time.Second
-	if interval == 0 {
-		interval = DEFAULT_INTERVAL
-	}
-	log.Infof("Set interval: %d seconds", int(interval.Seconds()))
+	log.Infof("Set monitoring interval: %d seconds", int(interval.Seconds()))
+
+	timeout := time.Duration(config.Config.GetInt("timeout")) * time.Second
+	log.Infof("Set monitoring timeout: %d seconds", int(timeout.Seconds()))
+
+	user_agent := config.Config.GetString("user_agent")
+	log.Infof("Set user agent: %s", user_agent)
 
 	um := URLMonitor{
 		tracerPool: sync.Pool{
-			New: func() interface{} { return httptracer.New() },
+			New: func() interface{} {
+				tracer := httptracer.New()
+				tracer.SetTimeout(timeout)
+				tracer.SetHeaders("user-agent", user_agent)
+				return tracer
+			},
 		},
-		sites:       make(map[string]*site),
-		mu:          &sync.RWMutex{},
-		clearTicker: time.NewTicker(clear_interval),
-		interval:    interval,
+		sites:          make(map[string]*site),
+		mu:             &sync.RWMutex{},
+		clearTicker:    time.NewTicker(clear_cron),
+		interval:       interval,
+		clear_interval: clear_interval,
 	}
 
 	go um.clearCron()
@@ -43,11 +47,12 @@ func New() *URLMonitor {
 }
 
 type URLMonitor struct {
-	tracerPool  sync.Pool
-	sites       map[string]*site
-	interval    time.Duration
-	clearTicker *time.Ticker
-	mu          *sync.RWMutex
+	tracerPool     sync.Pool
+	sites          map[string]*site
+	interval       time.Duration
+	clear_interval time.Duration
+	clearTicker    *time.Ticker
+	mu             *sync.RWMutex
 }
 
 func (um *URLMonitor) SetInterval(interval time.Duration) {
@@ -113,7 +118,7 @@ func (um *URLMonitor) clear() {
 	um.mu.Lock()
 	defer um.mu.Unlock()
 	for url, site := range um.sites {
-		if time.Since(site.GetUpdated()) >= um.interval*10 {
+		if time.Since(site.GetUpdated()) >= um.clear_interval {
 			count++
 			site.Stop()
 			delete(um.sites, url)

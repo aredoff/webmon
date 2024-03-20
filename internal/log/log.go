@@ -16,6 +16,8 @@ var (
 
 func Init() {
 	logLevel := config.Config.GetString("log.level")
+	logFile := config.Config.GetString("log.file")
+
 	if strings.ToLower(logLevel) == "debug" {
 		zapConfig.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
 		zapConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
@@ -26,7 +28,6 @@ func Init() {
 
 	zapConfig.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 
-	logFile := config.Config.GetString("log.file")
 	if logFile != "" {
 		zapConfig.Sampling = &zap.SamplingConfig{
 			Initial:    100,

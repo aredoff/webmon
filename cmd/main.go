@@ -26,11 +26,14 @@ func main() {
 	log.Init()
 	srv := server.New()
 
+	host := config.Config.GetString("host")
+	port := config.Config.GetInt("port")
+
 	go func() {
-		srv.Serve(fmt.Sprintf("%s:%d", config.Config.GetString("host"), config.Config.GetInt("port")))
+		srv.Serve(fmt.Sprintf("%s:%d", host, port))
 	}()
 
-	log.Info(fmt.Sprintf("Start server on %s:%d", config.Config.GetString("host"), config.Config.GetInt("port")))
+	log.Info(fmt.Sprintf("Start server on %s:%d", host, port))
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

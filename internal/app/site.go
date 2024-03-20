@@ -9,6 +9,10 @@ import (
 	"github.com/aredoff/reagate/pkg/httptracer"
 )
 
+const (
+	DEFAULT_INTERVAL = 55 * time.Second
+)
+
 func newSite(url string, um *URLMonitor) *site {
 	return &site{
 		um:       um,

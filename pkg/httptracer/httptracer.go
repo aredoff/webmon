@@ -19,6 +19,7 @@ const (
 type HttpTracer interface {
 	Trace(url, method string) *TracerResult
 	SetTimeout(d time.Duration)
+	SetHeaders(key, value string)
 }
 
 func New() HttpTracer {
@@ -37,15 +38,21 @@ func New() HttpTracer {
 				},
 			},
 		},
+		headers: map[string]string{},
 	}
 }
 
 type tracer struct {
-	client *http.Client
+	client  *http.Client
+	headers map[string]string
 }
 
 func (t *tracer) SetTimeout(d time.Duration) {
 	t.client.Timeout = d
+}
+
+func (t *tracer) SetHeaders(key, value string) {
+	t.headers[key] = value
 }
 
 func (t *tracer) SetMaxRedirects(n int) {
@@ -79,6 +86,11 @@ func (t *tracer) Trace(url, method string) *TracerResult {
 	}
 
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
+
+	for key, value := range t.headers {
+		req.Header.Add(key, value)
+	}
+
 	startTime = time.Now()
 	resp, err := t.client.Do(req)
 	if err != nil {
