@@ -1,0 +1,14 @@
+{
+    "host": "127.0.0.1",
+    "port": 3040,
+    "log": {
+        "level": "info",
+        "file": "/var/log/webmon/log.log"
+    },
+    "interval": 55,
+    "clear_interval": 1800,
+    "clear_cron": 1800,
+    "timeout": 30,
+    "user_agent": "Mozilla/5.0 (compatible; WebMonitoring/1.0;)"
+
+}
