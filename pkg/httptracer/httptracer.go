@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptrace"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -64,10 +65,15 @@ func (t *tracer) SetMaxRedirects(n int) {
 	}
 }
 
-func (t *tracer) Trace(url, method string) *TracerResult {
+func (t *tracer) Trace(siteURL, method string) *TracerResult {
+	_, err := url.ParseRequestURI(siteURL)
+	if err != nil {
+		return &TracerResult{Error: err}
+	}
+
 	defer t.client.CloseIdleConnections()
 
-	req, _ := http.NewRequest(strings.ToUpper(method), url, nil)
+	req, _ := http.NewRequest(strings.ToUpper(method), siteURL, nil)
 
 	var startTime, connectStartTime, nameLookupStartTime, tlsHandshakeStartTime time.Time
 	httpStatData := TracerResult{}
