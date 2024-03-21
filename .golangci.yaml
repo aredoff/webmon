@@ -1,0 +1,41 @@
+---
+run:
+  timeout: 5m
+  skip-dirs:
+    - cmd
+    - pkg
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - errcheck
+    - errname
+    - exhaustive
+    - exportloopref
+    - gci
+    - gocritic
+    - godot
+    - goimports
+    - gomodguard
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - prealloc
+    - revive
+    - staticcheck
+    - typecheck
+    - unparam
+    - unused
+    - whitespace
+    - forbidigo
+linters-settings:
+  gosec:
+    # To select a subset of rules to run.
+    # Available rules: https://github.com/securego/gosec#available-rules
+    # Default: [] - means include all rules
+    exclude:
+      - G306
+  misspell:
+    locale: "US"
