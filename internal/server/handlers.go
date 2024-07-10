@@ -3,6 +3,8 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 func (a *Server) traceHandler(w http.ResponseWriter, r *http.Request) {
@@ -10,6 +12,18 @@ func (a *Server) traceHandler(w http.ResponseWriter, r *http.Request) {
 	if url == "" {
 		http.Error(w, "Missing url parameter", http.StatusBadRequest)
 		return
+	}
+	excodes := r.URL.Query().Get("excodes")
+	excodesList := []int{}
+	if excodes != "" {
+		excodesStringList := strings.Split(excodes, ",")
+		for _, code := range excodesStringList {
+			codeInt, err := strconv.Atoi(code)
+			if err != nil {
+				continue
+			}
+			excodesList = append(excodesList, codeInt)
+		}
 	}
 	treport := a.sites.Trace(url, "GET")
 
@@ -28,12 +42,14 @@ func (a *Server) traceHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		reportFor.Error = 1
 	}
+	reportFor.AnalyzeWarning(excodesList)
 
 	body, err := reportFor.ToJSON()
 	if err != nil {
 		http.Error(w, "Json convert report error", http.StatusBadRequest)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(body)
 }
 
